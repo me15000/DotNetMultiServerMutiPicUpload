@@ -1,0 +1,346 @@
+
+html, body {
+	border: 0;
+	font-family: inherit;
+	font-size: 100%;
+	font-style: inherit;
+	font-weight: inherit;
+	margin: 0;
+	outline: 0;
+	padding: 0;
+	vertical-align: baseline;
+}
+:focus {/* remember to define focus styles! */
+	outline: 0;
+}
+body {
+	background: #fff;
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+table {/* tables still need 'cellspacing="0"' in the markup */
+	border-collapse: separate;
+	border-spacing: 0;
+}
+caption, th, td {
+	font-weight: normal;
+	text-align: left;
+}
+blockquote:before, blockquote:after, q:before, q:after {
+	content: "";
+}
+blockquote, q {
+	quotes: "" "";
+}
+a img {
+	border: 0;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+label {
+	cursor: pointer;
+}
+
+body {
+	background: url("images/main_bg.png") repeat scroll 0 0 #F0F0F0;
+	background-color: #393939;
+	font: 12px/1.8 tahoma, Arial, Helvetica, 'Liberation Sans', FreeSans, sans-serif;
+	color: #333333;
+}
+a, a:link {
+	color: #2C76C0;
+	outline: medium none;
+	text-decoration: none;
+}
+a:visited {
+}
+a:hover {
+	color: #61A7ED;
+	text-decoration: underline;
+}
+a:active {
+}
+.r {
+	float: right;
+}
+.l {
+	float: left;
+}
+.clear {
+	clear: both;
+}
+h1, h2, h3, h4, h5, h6 {
+}
+p {
+	margin-bottom: 10px;
+}
+/**
+ * @import form css
+ * @import url("form.css");
+ */
+fieldset {
+	border: 1px solid #DDDDDD;
+	margin: 10px;
+	padding: 5px 15px;
+}
+select {
+	border-color: #C0C0C0 #D9D9D9 #D9D9D9;
+	border-style: solid;
+	border-width: 1px;
+	font-size: 12px;
+	padding: 2px;
+}
+input, textarea {
+	border-width: 1px;
+	border-style: solid;
+	border-color: #C0C0C0 #D9D9D9 #D9D9D9 #D9D9D9;
+	border-radius: 2px;
+	font: 12px/1.5 tahoma, Arial, Helvetica, 'Liberation Sans', FreeSans, sans-serif;
+	outline: medium none;
+	padding: 5px;
+	vertical-align: baseline;
+}
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+	border-color: #61A7ED;
+}
+/*
+ * button 
+ */
+.button {
+	display: inline-block;
+	zoom: 1; /* zoom and *display = ie7 hack for display:inline-block */
+ *display: inline;
+	vertical-align: baseline;
+	margin: 0 2px;
+	outline: none;
+	cursor: pointer;
+	text-align: center;
+	text-decoration: none;
+	font: 14px/100% Arial, Helvetica, sans-serif;
+	padding: .5em 2em .55em;
+	border-radius: 4px;
+	box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.button:hover {
+	text-decoration: none;
+}
+.button:active {
+	position: relative;
+	top: 1px;
+}
+.bigrounded {
+	border-radius: 2em;
+}
+.medium {
+	font-size: 12px;
+	padding: .4em 1.5em .42em;
+}
+.small {
+	font-size: 11px;
+	padding: .2em 1em .275em;
+}
+/* white */
+.white {
+	color: #606060;
+	border: solid 1px #b7b7b7;
+	background: #fff;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ededed));
+	background: -moz-linear-gradient(top, #fff, #ededed);
+ filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed');
+}
+.white:hover {
+	background: #ededed;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#dcdcdc));
+	background: -moz-linear-gradient(top, #fff, #dcdcdc);
+ filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#dcdcdc');
+}
+.white:active {
+	color: #999;
+	background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#fff));
+	background: -moz-linear-gradient(top, #ededed, #fff);
+ filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#ffffff');
+}
+.form p {
+	border-bottom: 1px dotted #EEEEEE;
+	padding-bottom: 10px;
+}
+label.wx {
+	display: inline-block;
+	font-size: 14px;
+	padding-left: 10px;
+	width: 100px;
+	zoom: 1;
+ *display: inline;
+}
+input.small-input {
+	width: 150px;
+}
+input.large-input {
+	width: 250px;
+}
+/**
+ * no-ie6
+ */
+#no-ie6 {
+	background-color: yellow;
+	color: #555555;
+	left: 0;
+	font-size: 13px;
+	padding: 10px 0;
+	position: relative;
+	text-align: center;
+	top: 0;
+	width: 100%;
+	z-index: 9999;
+}
+#content {
+	background-color: #FFFFFF;
+	border: 1px solid #E6E6E6;
+	margin-left: 200px;
+	position: relative;
+	width: 780px;
+}
+/**
+	 * UPLOADER USAGE
+	 */
+#content #uploader {
+	margin: 30px;
+}
+#u-way {
+	color: #CCCCCC;
+	margin-bottom: 20px;
+}
+#u-way .selected {
+	color: #333333;
+	text-decoration: none;
+}
+#content #swfuploader {
+	margin-bottom: 20px;
+}
+#content #htmluploader {
+	margin-bottom: 20px;
+}
+#swfuploader #swfuploadbtn {
+	vertical-align: middle;
+}
+#swfuploadbtn #SWFUpload_0 {
+	vertical-align: middle;
+}
+#swfuploader #fsUploadProgress {
+	border-color: #CCCCCC;
+	border-style: solid;
+	border-width: 1px 1px 0;
+	margin: 20px 0;
+	width: 600px;
+}
+#fsUploadProgress .u-wrap {
+	border-bottom: 1px solid #CCCCCC;
+	color: #666666;
+	padding: 5px 10px;
+	position: relative;
+}
+.u-wrap .u-inside {
+}
+.u-inside .u-name, .u-inside .u-status {
+	display: inline-block;
+	width: 50%;
+	font-weight: bold;
+}
+.u-inside .u-bar {
+	background-color: rgba(238, 238, 238, 0.5);
+	border-right: 2px solid #0063DC;
+	height: 100%;
+	left: 0;
+	position: absolute;
+	top: 0;
+}
+.u-inside .u-cancel {
+	position: absolute;
+	right: 10px;
+}
+.u-inside .u-edit {
+	left: 0;
+	padding: 2px 10px;
+	position: absolute;
+	text-align: right;
+	text-decoration: none;
+	width: 580px;
+}
+.u-inside .u-photo-edit {
+	border-top: 1px dotted #CCCCCC;
+	margin: 5px 0;
+	padding: 5px;
+	display: none;
+	background-color: #F9F9F9;
+}
+#swfuploader .hiddenbtn {
+	display: none;
+}
+#uploader .photo-item a {
+	border: 1px solid #CCCCCC;
+	display: block;
+	padding: 2px;
+}
+#uploader .photo-item a img {
+	display: block;
+}
+#uploader .photo-meta {
+	padding: 3px;
+	width: 330px;
+	overflow: hidden;
+}
+#uploader .photo-meta ul li {
+	border-bottom: 1px dotted #CCCCCC;
+	padding: 5px 0;
+	overflow: hidden;
+}
+#uploader .photo-meta ul li span.pmeta {
+	color: #999999;
+	font-weight: bold;
+}
+#content #navigation {
+	margin: 10px auto 20px;
+	text-align: center;
+	width: 250px;
+}
+/**
+	 * AJAX USAGE
+	 */
+.editable {
+	padding: 2px 0;
+	cursor: pointer;
+}
+.editable:hover {
+	background-color: #FCFC76;
+	color: #333333;
+}
+.edititle {
+	display: none;
+	padding: 2px;
+	width: 150px;
+	line-height: 1;
+}
+.editdesc {
+	display: none;
+	padding: 2px;
+	width: 225px;
+	height: 100px;
+}
+#footer {
+	color: #888888;
+	font-size: 11px;
+	margin: 30px 0 30px 200px;
+	text-align: center;
+	width: 780px;
+}
+#footer a {
+	color: #888888;
+	font-weight: bold;
+}
+#footer a:hover {
+	color: #666666;
+	text-decoration: none;
+}
