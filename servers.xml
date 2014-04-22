@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-
-<Servers>
-  <!--备份服务器1-->
-  <Server Name="s1" Uri="http://s1.i-2.upload.xx.com/do.ashx" SecurityKey="asdfdsfsdf" />
-
-  <!--备份服务器2-->
-  <Server Name="s2" Uri="http://s2.i-2.upload.xx.com/do.ashx" SecurityKey="asdfdsfsdf" />
-</Servers>

@@ -77,7 +77,7 @@ i-1.xx.com 绑定至主服务器
 
 【第二步】
 
-把程序放置在两台服务器 站点i-1.xx.com 下面，修改配置文件 /web.config 和 /servers.xml
+把程序放置在两台服务器 站点i-1.xx.com 下面，修改配置文件 /web.config 和 /servers.xml.config
 
 /web.config
 
@@ -90,12 +90,12 @@ i-1.xx.com 绑定至主服务器
 	<configuration>
 	  <appSettings>
 
-		<!--当前服务器名称 对应 servers.xml-->
+		<!--当前服务器名称 对应 servers.xml.config-->
 		<add key="ServerName" value="s1"/>
 		
 		
 		<!--备份服务器列表配置文件-->
-		<add key="Servers" value="/servers.xml"/>
+		<add key="Servers" value="/servers.xml.config"/>
 		
 		<!--当前服务器安全密钥-->
 		<add key="SecurityKey" value="asdfdsfsdf"/>
@@ -105,7 +105,7 @@ i-1.xx.com 绑定至主服务器
 		
 	  
 		<!--当前服务器域名-->
-		<add key="Domain" value="http://i-2.xx.com"/>
+		<add key="Domain" value="http://i-1.xx.com"/>
 	  </appSettings>
 	  <!--
 		有关 .NET 4.5 的 web.config 更改的说明，请参见 http://go.microsoft.com/fwlink/?LinkId=235367。
@@ -124,16 +124,16 @@ i-1.xx.com 绑定至主服务器
 
 
 
-/servers.xml
+/servers.xml.config
 
 	<?xml version="1.0" encoding="utf-8" ?>
 	
 	<Servers>
 	  <!--备份服务器1-->
-	  <Server Name="s1" Uri="http://s1.i-2.upload.xx.com/do.ashx" SecurityKey="asdfdsfsdf" />
+	  <Server Name="s1" Uri="http://s1.i-1.upload.xx.com/do.ashx" SecurityKey="asdfdsfsdf" />
 	
 	  <!--备份服务器2-->
-	  <Server Name="s2" Uri="http://s2.i-2.upload.xx.com/do.ashx" SecurityKey="asdfdsfsdf" />
+	  <Server Name="s2" Uri="http://s2.i-1.upload.xx.com/do.ashx" SecurityKey="asdfdsfsdf" />
 	</Servers>
 
 
@@ -146,10 +146,10 @@ i-1.xx.com 绑定至主服务器
 1. 核心程序 /do.ashx
 
 
-部署好程序之后，就可以通过地址 http://i-1.xx.com/.m/upload.aspx 去上传图片 
+部署好程序之后，就可以通过地址 http://i-1.xx.com/.m/upload.aspx?SecurityKey=asdfdsfsdf 去上传图片 
 
-或 http://s1.i-1.xx.com/.m/upload.aspx 上传图片
-或 http://s2.i-1.xx.com/.m/upload.aspx 上传图片
+或 http://s1.i-1.xx.com/.m/upload.aspx?SecurityKey=asdfdsfsdf 上传图片
+或 http://s2.i-1.xx.com/.m/upload.aspx?SecurityKey=asdfdsfsdf 上传图片
 
 无论使用哪个地址，程序都会自动把图片合并同步至另外的服务器上面
 
