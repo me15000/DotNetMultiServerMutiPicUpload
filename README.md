@@ -10,6 +10,8 @@ windows server 2008  r2
 
 iis 7.5
 
+URL Rewrite 2.0 模块
+
 
 支持多图片上传，多服务器备份
 
