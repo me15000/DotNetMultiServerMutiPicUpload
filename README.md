@@ -1,4 +1,4 @@
-#DotNetMultiServerUpload
+#DotNetMultiServerMutiPicUpload
 
 ## 简介 ##
 
@@ -35,7 +35,7 @@ iis 7.5
 
 为了增强用户体验，就要考虑到上述问题，对图片做好实时备份
 
-**DotNetMultiServerUpload** 就是专门为解决这些问题而诞生
+**DotNetMultiServerMutiPicUpload** 就是专门为解决这些问题而诞生
 
 
 ## 使用说明 ##
@@ -106,7 +106,48 @@ i-1.xx.com 绑定至主服务器
 	  
 		<!--当前服务器域名-->
 		<add key="Domain" value="http://i-1.xx.com"/>
+		
+
+		<!--水印所在目录-->
+    	<add key="WaterMarkPath" value="/wm" />
+
+
+		<!--缓存所在目录-->
+    	<add key="CachePath" value="/cache" />
+
 	  </appSettings>
+
+	  <system.webServer>
+	
+	    <rewrite>
+	      <rules>
+	
+	        <!--防盗链|白名单列表-->
+	        <rule name="WhiteList" stopProcessing="true">
+	          <match url="/.*" />
+	          <action type="Rewrite" url="/404.html" />
+	          <conditions>
+	            <add input="{HTTP_REFERER}" pattern="^$" negate="true" />
+	            <add input="{HTTP_REFERER}" pattern="^http\://.*(so|360|qq|baidu)\.(com|cn).*$" negate="true" />
+	          </conditions>
+	        </rule>
+	
+	
+	        <!--动态输出图片-->
+	        <rule name="dynamicecho">
+	          <match url="^(\d+)/(\d+)/(\d+)/([\w\=]+)/([^/]+)$" />
+	          <action type="Rewrite" url="/do.ashx?action=dynamicecho&amp;path=/{R:1}/{R:2}/{R:3}/&amp;base64={R:4}&amp;name={R:5}" />
+	          <conditions>
+	            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+	          </conditions>
+	        </rule>
+	
+	      </rules>
+	    </rewrite>
+	
+	
+	  </system.webServer>
+
 	  <!--
 		有关 .NET 4.5 的 web.config 更改的说明，请参见 http://go.microsoft.com/fwlink/?LinkId=235367。
 
@@ -137,6 +178,51 @@ i-1.xx.com 绑定至主服务器
 	</Servers>
 
 
+## 程序功能 ##
+
+程序除了有多服务器备份的功能之外，还可以根据URL 地址，对图片进行常用的 缩放、裁切、加水印 
+
+约定：
+
+【1】 缩放功能
+*(宽x高)*  此参数为  对图片进行缩放 宽和高可以任选其一
+ 
+如:
+(400x) 表示 宽设定为400 高度自适应  
+(x200) 表示 高设定为200 宽度自适应
+
+(400x200) 表示 把图片等比缩放为 最宽为400 最高为 200 的缩略图
+
+【2】 裁切功能
+*(宽_高)* 此参数为 对图片进行等比裁切，对图片按照宽度进行缩放，然后 如果高度超出设定高度 则进行裁切
+如：
+(400_200) 表示把图片 等比缩放为宽度为400 的图，如果缩放后的图片高度 超出200 ，则裁切为 400x200 的图片
+
+【3】 水印功能 
+[wm:水印文件名,l:左边距离,t:顶部距离,b:底部距离,r:右边距离]
+
+[wm:1.png,l:20,t:20]
+
+对原图加一个水印，水印图片为 1.png 水印位置为 离左边20像素，离顶部20像素
+
+
+然后需要对这些参数进行base64 编码
+
+如： (600x) 参数 编码为 base64 为 KDYwMHgp
+
+如:原图地址为：
+http://i-1.xx.com/2014/5/5/599bd787-ee63-40fd-a930-a81684475df6.jpg
+
+
+加入base64 参数
+http://i-1.xx.com/2014/5/5/KDYwMHgp/599bd787-ee63-40fd-a930-a81684475df6.jpg
+
+就可以得到一个宽度为 600 高度等比缩放的图片
+
+
+为了提升程序性能，程序在动态处理图片之后，将把图片保存在 web.config 中配置的 CachePath 路径下
+
+
 
 ## 程序说明 ##
 
@@ -155,7 +241,7 @@ i-1.xx.com 绑定至主服务器
 
 当然在合并同步另外的服务器的时候 也可能会遇到 网络问题或服务器问题，导致同步失败的可能
 
-这种情况 **DotNetMultiServerUpload** 是考虑到的，当出现上述问题导致同步失败的时候，
+这种情况 **DotNetMultiServerMutiPicUpload** 是考虑到的，当出现上述问题导致同步失败的时候，
 
 程序就会创建 日志文件，记录上传失败的文件信息和服务器信息，
 
