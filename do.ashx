@@ -11,7 +11,14 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
+
 using System.Threading.Tasks;
+
+
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 
 public class DoHandler : IHttpHandler
@@ -72,6 +79,10 @@ public class DoHandler : IHttpHandler
                 break;
 
 
+            //动态输出图片
+            case "dynamicecho":
+                dynamic_echo();
+                break;
 
 
             default:
@@ -79,6 +90,143 @@ public class DoHandler : IHttpHandler
         }
     }
 
+
+
+
+    void dynamic_echo()
+    {
+        string path = Request.QueryString["path"] ?? string.Empty;
+        string name = Request.QueryString["name"] ?? string.Empty;
+        string base64 = Request.QueryString["base64"] ?? string.Empty;
+
+
+        Response.ContentType = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(Path.GetExtension(name)).GetValue("Content Type", "application/octet-stream").ToString();
+
+
+        string info = Base64Helper.DecodeBase64(base64);
+
+        if (!string.IsNullOrEmpty(info))
+        {
+
+            string cacheAbsPath = ServerUtility.MapPath(ConfigSetting.Current.CachePath + path + base64 + "/" + name);
+
+
+            //缓存文件已存在
+            if (File.Exists(cacheAbsPath))
+            {
+                Response.TransmitFile(cacheAbsPath);
+                return;
+            }
+
+
+
+            string filePath = path + name;
+
+            string fileAbsPath = ServerUtility.MapPath(filePath);
+
+            if (File.Exists(fileAbsPath))
+            {
+
+                var dynamicInfo = DynamicInfo.Get(base64);
+
+                Image originalImage = Image.FromFile(fileAbsPath);
+                Image outImg = null;
+
+
+
+                if (dynamicInfo.Crop != null)
+                {
+                    outImg = ImageHelper.GetImageThumbnailCropHeight(originalImage, dynamicInfo.Crop.Width, dynamicInfo.Crop.Height);
+                }
+
+                if (dynamicInfo.Resize != null)
+                {
+                    var resize = dynamicInfo.Resize;
+                    if (resize.Height > 0 && resize.Width > 0)
+                    {
+                        outImg = ImageHelper.GetImageThumbnail(originalImage, dynamicInfo.Resize.Width, dynamicInfo.Resize.Height);
+                    }
+                    else if (resize.Height > 0 && resize.Width == 0)
+                    {
+                        outImg = ImageHelper.GetImageThumbnailByHeight(originalImage, dynamicInfo.Resize.Height);
+
+                    }
+                    else if (resize.Height == 0 && resize.Width > 0)
+                    {
+                        outImg = ImageHelper.GetImageThumbnailByWidth(originalImage, dynamicInfo.Resize.Width);
+                    }
+                    else
+                    {
+                        outImg = originalImage;
+                    }
+                }
+
+
+                if (dynamicInfo.WaterMark != null)
+                {
+                    if (outImg == null)
+                    {
+                        outImg = ImageHelper.WatermarkImage(originalImage, dynamicInfo.WaterMark);
+                    }
+                    else
+                    {
+                        outImg = ImageHelper.WatermarkImage(outImg, dynamicInfo.WaterMark);
+                    }
+                }
+
+
+
+
+
+                string dirPath = Path.GetDirectoryName(cacheAbsPath);
+
+                if (!Directory.Exists(dirPath))
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
+
+                try
+                {
+
+                    if (outImg == null)
+                    {
+                        Response.StatusCode = 404;
+                    }
+                    else
+                    {
+                        outImg.Save(cacheAbsPath);
+                        Response.TransmitFile(cacheAbsPath);
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Response.Write(cacheAbsPath);
+                    Response.Write(ex.Message);
+
+                }
+                finally
+                {
+                    if (outImg != null)
+                    {
+                        outImg.Dispose();
+                    }
+
+                    if (originalImage != null)
+                    {
+                        originalImage.Dispose();
+                    }
+
+                }
+
+                return;
+            }
+        }
+
+
+        Response.StatusCode = 404;
+        Response.End();
+    }
 
     void echo_json(bool success, string json)
     {
@@ -242,11 +390,11 @@ public class DoHandler : IHttpHandler
                     {
                         Response.Write("Server:" + ser.Name + ",Uri:" + ser.Uri + " 【upload failed】\r\n");
                     }
-                    
+
                     task.Dispose();
                 }
-                
-                
+
+
             }
         }
     }
@@ -544,6 +692,21 @@ public class ConfigSetting
         }
     }
 
+    public string CachePath
+    {
+        get
+        {
+            return ConfigurationManager.AppSettings["CachePath"];
+        }
+    }
+
+    public string WaterMarkPath
+    {
+        get
+        {
+            return ConfigurationManager.AppSettings["WaterMarkPath"];
+        }
+    }
 
 }
 
@@ -675,3 +838,377 @@ public static class HttpPost
         public byte[] Data { get; set; }
     }
 }
+
+
+public static class Base64Helper
+{
+
+    public static bool TryParseBase64(string base64, out string str)
+    {
+        str = null;
+        try
+        {
+            byte[] bytes = Convert.FromBase64String(base64);
+            str = System.Text.Encoding.ASCII.GetString(bytes);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+
+    public static string DecodeBase64(string base64)
+    {
+        string str = null;
+
+        bool succ = TryParseBase64(base64, out str);
+
+        if (!succ)
+        {
+            return null;
+        }
+        else
+        {
+            return str;
+        }
+    }
+
+
+    public static string EncodeBase64(string str)
+    {
+        return Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(str));
+    }
+}
+
+
+
+public static class ImageHelper
+{
+    public static Image GetImageThumbnailByHeight(Image imgPhoto, int height)
+    {
+        decimal nPercent = (decimal)imgPhoto.Height / (decimal)height;
+
+        if (nPercent > 1)
+        {
+            return GetImageThumbnail(imgPhoto, Convert.ToInt32(Math.Round(imgPhoto.Width / nPercent, 0)), height);
+        }
+        else
+        {
+            return imgPhoto;
+        }
+
+    }
+
+
+    public static Image GetImageThumbnailByWidth(Image imgPhoto, int width)
+    {
+        decimal nPercent = (decimal)imgPhoto.Width / (decimal)width;
+
+        if (nPercent > 1)
+        {
+            return GetImageThumbnail(imgPhoto, width, Convert.ToInt32(Math.Round(imgPhoto.Height / nPercent, 0)));
+        }
+        else
+        {
+            return imgPhoto;
+        }
+    }
+
+    /// <summary>
+    /// 缩放并且根据高度裁切图片
+    /// </summary>
+    /// <param name="originalImage"></param>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
+    /// <returns></returns>
+    public static Image GetImageThumbnailCropHeight(Image originalImage, int width, int height)
+    {
+
+        Image imgPhoto = GetImageThumbnailByWidth(originalImage, width);
+
+        if (imgPhoto.Height > height)
+        {
+            Bitmap image = new Bitmap(imgPhoto.Width, height, PixelFormat.Format24bppRgb);
+            Graphics graphics = Graphics.FromImage(image);
+            graphics.InterpolationMode = InterpolationMode.Default;
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            graphics.DrawImage(imgPhoto, new Rectangle(0, 0, imgPhoto.Width, height), new Rectangle(0, 0, imgPhoto.Width, height), GraphicsUnit.Pixel);
+            graphics.Dispose();
+            imgPhoto.Dispose();
+
+            return image;
+        }
+        else
+        {
+            return imgPhoto;
+        }
+    }
+
+    public static Image GetImageThumbnail(Image imgPhoto, int width, int height)
+    {
+        decimal nPercent = 1;
+        decimal wPercent = (decimal)imgPhoto.Width / (decimal)width;
+        decimal hPercent = (decimal)imgPhoto.Height / (decimal)height;
+
+
+        if (imgPhoto.Width <= width && imgPhoto.Height <= height)
+        {
+            return imgPhoto;
+        }
+        else
+        {
+            nPercent = wPercent > hPercent ? wPercent : hPercent;
+        }
+
+        int w, h;
+
+        w = Convert.ToInt32(Math.Round(imgPhoto.Width / nPercent, 0));
+        h = Convert.ToInt32(Math.Round(imgPhoto.Height / nPercent, 0));
+
+
+
+
+        try
+        {
+            Bitmap image = new Bitmap(w, h, PixelFormat.Format24bppRgb);
+            Graphics graphics = Graphics.FromImage(image);
+            graphics.InterpolationMode = InterpolationMode.Default;
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            graphics.DrawImage(imgPhoto, new Rectangle(0, 0, w, h), new Rectangle(0, 0, imgPhoto.Width, imgPhoto.Height), GraphicsUnit.Pixel);
+            graphics.Dispose();
+
+            return image;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+
+    public static Image WatermarkImage(Image originalImg, WaterMarkInfo wmi)
+    {
+        Bitmap image = new Bitmap(originalImg.Width, originalImg.Height, PixelFormat.Format32bppArgb);
+        using (Graphics graphics = Graphics.FromImage(image))
+        {
+
+
+
+            string wmAbsPath = HttpContext.Current.Server.MapPath(ConfigSetting.Current.WaterMarkPath + "/" + wmi.WaterMark);
+
+
+            Image waterImg = Image.FromFile(wmAbsPath);
+
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            graphics.InterpolationMode = InterpolationMode.Default;
+            graphics.DrawImage(originalImg, new Rectangle(0, 0, originalImg.Width, originalImg.Height), 0, 0, originalImg.Width, originalImg.Height, GraphicsUnit.Pixel);
+
+
+            Rectangle destRect = new Rectangle
+            {
+                Height = waterImg.Height,
+                Width = waterImg.Width
+            };
+            if (wmi.Top.HasValue)
+            {
+                destRect.Y = wmi.Top.Value;
+            }
+            if (wmi.Right.HasValue)
+            {
+                destRect.X = (originalImg.Width - waterImg.Width) - wmi.Right.Value;
+            }
+            if (wmi.Bottom.HasValue)
+            {
+                destRect.Y = (originalImg.Height - waterImg.Height) - wmi.Bottom.Value;
+            }
+            if (wmi.Left.HasValue)
+            {
+                destRect.X = wmi.Left.Value;
+            }
+            graphics.DrawImage(waterImg, destRect, 0, 0, waterImg.Width, waterImg.Height, GraphicsUnit.Pixel);
+            waterImg.Dispose();
+        }
+        return image;
+    }
+
+
+
+}
+
+
+public class WaterMarkInfo
+{
+    public int? Left { get; set; }
+    public int? Right { get; set; }
+    public int? Top { get; set; }
+    public int? Bottom { get; set; }
+    public string WaterMark { get; set; }
+}
+
+
+public class ResizeInfo
+{
+    public int Width { get; set; }
+    public int Height { get; set; }
+}
+
+public class CropInfo
+{
+    public int Width { get; set; }
+    public int Height { get; set; }
+}
+
+
+public class DynamicInfo
+{
+    WaterMarkInfo waterMarkInfo = null;
+
+    public WaterMarkInfo WaterMark
+    {
+        get { return waterMarkInfo; }
+        set { waterMarkInfo = value; }
+    }
+
+    ResizeInfo resizeInfo = null;
+    public ResizeInfo Resize
+    {
+        get { return resizeInfo; }
+        set { resizeInfo = value; }
+    }
+
+    CropInfo cropInfo = null;
+    public CropInfo Crop
+    {
+        get { return cropInfo; }
+        set { cropInfo = value; }
+    }
+
+
+    //裁切参数
+    static Regex RegCropInfo = new Regex(@"\((?<w>\d*)_(?<h>\d*)\)");
+
+    //缩放参数
+    static Regex RegResizeInfo = new Regex(@"\((?<w>\d*)x(?<h>\d*)\)");
+
+    //水印参数
+    static Regex RegWaterMarkInfo = new Regex(@"\[(?<p>.+?)\]");
+
+    public static DynamicInfo Get(string base64)
+    {
+        string info = Base64Helper.DecodeBase64(base64);
+
+        DynamicInfo entity = new DynamicInfo();
+
+
+        if (true)
+        {
+            Match m = RegResizeInfo.Match(info);
+
+            if (m.Success)
+            {
+
+                ResizeInfo inf = new ResizeInfo();
+
+                string w = m.Groups["w"].Value;
+                string h = m.Groups["h"].Value;
+
+                int wInt, hInt;
+
+                bool wB = int.TryParse(w, out wInt), hB = int.TryParse(h, out hInt);
+
+                if (wB)
+                {
+                    inf.Width = wInt;
+                }
+
+                if (hB)
+                {
+                    inf.Height = hInt;
+                }
+
+                entity.Resize = inf;
+            }
+        }
+
+
+
+        if (true)
+        {
+
+            Match m = RegCropInfo.Match(info);
+
+            if (m.Success)
+            {
+                CropInfo inf = new CropInfo();
+
+                string w = m.Groups["w"].Value;
+                string h = m.Groups["h"].Value;
+
+                int wInt, hInt;
+                bool wB = int.TryParse(w, out wInt), hB = int.TryParse(h, out hInt);
+
+                if (wB)
+                {
+                    inf.Width = wInt;
+                }
+
+                if (hB)
+                {
+                    inf.Height = hInt;
+                }
+
+                entity.Crop = inf;
+
+            }
+        }
+
+
+        if (true)
+        {
+            string pinfoString = RegWaterMarkInfo.Match(info).Groups["p"].Value;
+
+
+            string[] pinfos = pinfoString.Split(',');
+
+            if (pinfos.Length > 0)
+            {
+
+                WaterMarkInfo inf = new WaterMarkInfo();
+
+                for (int i = 0; i < pinfos.Length; i++)
+                {
+                    string[] arr = pinfos[i].Split(':');
+
+                    if (arr.Length == 2)
+                    {
+                        switch (arr[0])
+                        {
+                            case "wm":
+                                inf.WaterMark = arr[1];
+                                break;
+                            case "t":
+                                inf.Top = int.Parse(arr[1]);
+                                break;
+                            case "r":
+                                inf.Right = int.Parse(arr[1]);
+                                break;
+                            case "b":
+                                inf.Bottom = int.Parse(arr[1]);
+                                break;
+                            case "l":
+                                inf.Left = int.Parse(arr[1]);
+                                break;
+                        }
+                    }
+                }
+
+            }
+        }
+
+        return entity;
+    }
+}
+
+
