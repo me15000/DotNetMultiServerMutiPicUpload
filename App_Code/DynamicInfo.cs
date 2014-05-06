@@ -36,7 +36,13 @@ public class DynamicInfo
 
     public static DynamicInfo Get(string base64)
     {
+
+
+
         string info = Base64Helper.DecodeBase64(base64);
+
+
+
 
         DynamicInfo entity = new DynamicInfo();
 
@@ -106,41 +112,48 @@ public class DynamicInfo
 
         if (true)
         {
-            string pinfoString = RegWaterMarkInfo.Match(info).Groups["p"].Value;
+            Match m = RegWaterMarkInfo.Match(info);
 
-
-            string[] pinfos = pinfoString.Split(',');
-
-            if (pinfos.Length > 0)
+            if (m.Success)
             {
+                string pinfoString = m.Groups["p"].Value;
 
-                WaterMarkInfo inf = new WaterMarkInfo();
+                string[] pinfos = pinfoString.Split(',');
 
-                for (int i = 0; i < pinfos.Length; i++)
+                if (pinfos.Length > 0)
                 {
-                    string[] arr = pinfos[i].Split(':');
 
-                    if (arr.Length == 2)
+                    WaterMarkInfo inf = new WaterMarkInfo();
+
+                    for (int i = 0; i < pinfos.Length; i++)
                     {
-                        switch (arr[0])
+                        string[] arr = pinfos[i].Split(':');
+
+                        if (arr.Length == 2)
                         {
-                            case "wm":
-                                inf.WaterMark = arr[1];
-                                break;
-                            case "t":
-                                inf.Top = int.Parse(arr[1]);
-                                break;
-                            case "r":
-                                inf.Right = int.Parse(arr[1]);
-                                break;
-                            case "b":
-                                inf.Bottom = int.Parse(arr[1]);
-                                break;
-                            case "l":
-                                inf.Left = int.Parse(arr[1]);
-                                break;
+                            switch (arr[0])
+                            {
+                                case "wm":
+                                    inf.WaterMark = arr[1];
+                                    break;
+                                case "t":
+                                    inf.Top = int.Parse(arr[1]);
+                                    break;
+                                case "r":
+                                    inf.Right = int.Parse(arr[1]);
+                                    break;
+                                case "b":
+                                    inf.Bottom = int.Parse(arr[1]);
+                                    break;
+                                case "l":
+                                    inf.Left = int.Parse(arr[1]);
+                                    break;
+                            }
                         }
                     }
+
+                    entity.waterMarkInfo = inf;
+
                 }
 
             }
