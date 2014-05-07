@@ -41,6 +41,7 @@ public class DoHandler : IHttpHandler
 
 
 
+
         string securityKey = Request["SecurityKey"] ?? string.Empty;
 
         isTrueSecurityKey = ConfigSetting.Current.SecurityKey == securityKey;
@@ -88,6 +89,28 @@ public class DoHandler : IHttpHandler
         string name = Request.QueryString["name"] ?? string.Empty;
         string base64 = Request.QueryString["base64"] ?? string.Empty;
 
+
+
+
+
+
+        string if_modified_since = Request.Headers["If-Modified-Since"] ?? string.Empty;        
+
+        if (!string.IsNullOrEmpty(if_modified_since))
+        {
+            Response.StatusCode = (int)System.Net.HttpStatusCode.NotModified;
+            Response.StatusDescription = "from browser cache ";
+            return;
+        }
+
+        int cacheDays = 365 * 10;
+
+        TimeSpan ts = TimeSpan.FromDays(cacheDays);
+
+        //Response.Cache.SetMaxAge(ts);
+        Response.Cache.SetExpires(DateTime.Now.Add(ts));
+        Response.Cache.SetLastModified(new DateTime(2000, 1, 1));
+        Response.Cache.SetCacheability(HttpCacheability.Private);
 
         Response.ContentType = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(Path.GetExtension(name)).GetValue("Content Type", "application/octet-stream").ToString();
 
