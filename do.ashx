@@ -206,7 +206,8 @@ public class DoHandler : IHttpHandler
                     }
                     else
                     {
-                        outImg.Save(cacheAbsPath);
+                        outImg.Save(cacheAbsPath, originalImage.RawFormat);
+                        
                         Response.TransmitFile(cacheAbsPath);
                     }
 
