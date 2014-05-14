@@ -52,8 +52,11 @@ public static class ImageHelper
         {
             Bitmap image = new Bitmap(imgPhoto.Width, height, PixelFormat.Format24bppRgb);
             Graphics graphics = Graphics.FromImage(image);
-            graphics.InterpolationMode = InterpolationMode.Default;
-            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+            graphics.CompositingQuality = CompositingQuality.HighQuality;
+
             graphics.DrawImage(imgPhoto, new Rectangle(0, 0, imgPhoto.Width, height), new Rectangle(0, 0, imgPhoto.Width, height), GraphicsUnit.Pixel);
             graphics.Dispose();
             imgPhoto.Dispose();
@@ -94,8 +97,11 @@ public static class ImageHelper
         {
             Bitmap image = new Bitmap(w, h, PixelFormat.Format24bppRgb);
             Graphics graphics = Graphics.FromImage(image);
-            graphics.InterpolationMode = InterpolationMode.Default;
-            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+            graphics.CompositingQuality = CompositingQuality.HighQuality;
+
             graphics.DrawImage(imgPhoto, new Rectangle(0, 0, w, h), new Rectangle(0, 0, imgPhoto.Width, imgPhoto.Height), GraphicsUnit.Pixel);
             graphics.Dispose();
 
@@ -121,8 +127,11 @@ public static class ImageHelper
 
             Image waterImg = Image.FromFile(wmAbsPath);
 
-            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-            graphics.InterpolationMode = InterpolationMode.Default;
+
+            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+            graphics.CompositingQuality = CompositingQuality.HighQuality;
+
             graphics.DrawImage(originalImg, new Rectangle(0, 0, originalImg.Width, originalImg.Height), 0, 0, originalImg.Width, originalImg.Height, GraphicsUnit.Pixel);
 
 
@@ -147,6 +156,11 @@ public static class ImageHelper
             {
                 destRect.X = wmi.Left.Value;
             }
+
+            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+            graphics.CompositingQuality = CompositingQuality.HighQuality;
+
             graphics.DrawImage(waterImg, destRect, 0, 0, waterImg.Width, waterImg.Height, GraphicsUnit.Pixel);
             waterImg.Dispose();
         }
