@@ -64,7 +64,7 @@ public static class HttpPost
         {
             if (files.Length > 0)
             {
-                string format = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n Content-Type: application/octet-stream\r\n\r\n";
+                string format = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\";\r\n Content-Type: application/octet-stream\r\n\r\n";
                 foreach (HttpUploadFile file in files)
                 {
                     string s = string.Format(format, file.Name, file.FileName);
