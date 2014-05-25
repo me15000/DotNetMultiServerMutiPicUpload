@@ -53,7 +53,7 @@ public static class ImageHelper
             Bitmap image = new Bitmap(imgPhoto.Width, height, PixelFormat.Format24bppRgb);
             Graphics graphics = Graphics.FromImage(image);
 
-            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.InterpolationMode = InterpolationMode.Default;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
@@ -98,7 +98,7 @@ public static class ImageHelper
             Bitmap image = new Bitmap(w, h, PixelFormat.Format24bppRgb);
             Graphics graphics = Graphics.FromImage(image);
 
-            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.InterpolationMode = InterpolationMode.Default;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
@@ -128,7 +128,7 @@ public static class ImageHelper
             Image waterImg = Image.FromFile(wmAbsPath);
 
 
-            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.InterpolationMode = InterpolationMode.Default;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
@@ -157,7 +157,7 @@ public static class ImageHelper
                 destRect.X = wmi.Left.Value;
             }
 
-            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.InterpolationMode = InterpolationMode.Default;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
