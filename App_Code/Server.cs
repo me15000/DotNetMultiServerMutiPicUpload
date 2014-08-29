@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-public struct Server
+public class Server
 {
     public Uri Uri { get; set; }
 

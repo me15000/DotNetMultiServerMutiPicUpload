@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Web;
 
 public static class ImageHelper
@@ -52,8 +53,9 @@ public static class ImageHelper
         {
             Bitmap image = new Bitmap(imgPhoto.Width, height, PixelFormat.Format24bppRgb);
             Graphics graphics = Graphics.FromImage(image);
+            graphics.FillRectangle(Brushes.White, 0, 0, width, height);
 
-            graphics.InterpolationMode = InterpolationMode.Default;
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
@@ -97,8 +99,9 @@ public static class ImageHelper
         {
             Bitmap image = new Bitmap(w, h, PixelFormat.Format24bppRgb);
             Graphics graphics = Graphics.FromImage(image);
+            graphics.FillRectangle(Brushes.White, 0, 0, width, height);
 
-            graphics.InterpolationMode = InterpolationMode.Default;
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
@@ -127,10 +130,12 @@ public static class ImageHelper
 
             Image waterImg = Image.FromFile(wmAbsPath);
 
+            graphics.FillRectangle(Brushes.White, 0, 0, originalImg.Width, originalImg.Height);
 
-            graphics.InterpolationMode = InterpolationMode.Default;
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
+
 
             graphics.DrawImage(originalImg, new Rectangle(0, 0, originalImg.Width, originalImg.Height), 0, 0, originalImg.Width, originalImg.Height, GraphicsUnit.Pixel);
 
@@ -165,6 +170,47 @@ public static class ImageHelper
             waterImg.Dispose();
         }
         return image;
+    }
+
+
+    public static Image ZipImage(Image imgPhoto, int flag)
+    {
+        EncoderParameters encoderParams = new EncoderParameters();
+        long[] numArray = new long[] { (long)flag };
+        EncoderParameter parameter = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, numArray);
+        encoderParams.Param[0] = parameter;
+
+
+
+        try
+        {
+            ImageCodecInfo[] imageEncoders = ImageCodecInfo.GetImageEncoders();
+            ImageCodecInfo encoder = null;
+            for (int i = 0; i < imageEncoders.Length; i++)
+            {
+                if (imageEncoders[i].FormatDescription.Equals("JPEG"))
+                {
+                    encoder = imageEncoders[i];
+                    break;
+                }
+            }
+            MemoryStream stream = new MemoryStream();
+            if (encoder != null)
+            {
+                imgPhoto.Save(stream, encoder, encoderParams);
+            }
+            else
+            {
+                imgPhoto.Save(stream, imgPhoto.RawFormat);
+            }
+
+
+            return Image.FromStream(stream);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
 

@@ -86,7 +86,7 @@ public class DoHandler : IHttpHandler
     void dynamic_echo()
     {
         string path = Request.QueryString["path"] ?? string.Empty;
-        string name = Request.QueryString["name"] ?? string.Empty;
+        string fileName = Request.QueryString["name"] ?? string.Empty;
         string base64 = Request.QueryString["base64"] ?? string.Empty;
 
 
@@ -94,7 +94,7 @@ public class DoHandler : IHttpHandler
 
 
 
-        string if_modified_since = Request.Headers["If-Modified-Since"] ?? string.Empty;        
+        string if_modified_since = Request.Headers["If-Modified-Since"] ?? string.Empty;
 
         if (!string.IsNullOrEmpty(if_modified_since))
         {
@@ -105,14 +105,21 @@ public class DoHandler : IHttpHandler
 
         int cacheDays = 365 * 10;
 
+
+
         TimeSpan ts = TimeSpan.FromDays(cacheDays);
+        DateTime now = DateTime.Now;
+        DateTime expDate = now.Add(ts);
 
-        //Response.Cache.SetMaxAge(ts);
-        Response.Cache.SetExpires(DateTime.Now.Add(ts));
-        Response.Cache.SetLastModified(new DateTime(2000, 1, 1));
-        Response.Cache.SetCacheability(HttpCacheability.Private);
+        Response.Cache.SetCacheability(HttpCacheability.Public);
+        Response.Cache.SetExpires(expDate);
+        Response.Cache.SetMaxAge(ts);//cdn 缓存时间
+        Response.Cache.SetLastModified(new DateTime(2010, 1, 1));
 
-        Response.ContentType = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(Path.GetExtension(name)).GetValue("Content Type", "application/octet-stream").ToString();
+
+        string fileExt = Path.GetExtension(fileName).ToLower();
+
+        Response.ContentType = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(fileExt).GetValue("Content Type", "application/octet-stream").ToString();
 
 
         string info = Base64Helper.DecodeBase64(base64);
@@ -120,7 +127,7 @@ public class DoHandler : IHttpHandler
         if (!string.IsNullOrEmpty(info))
         {
 
-            string cacheAbsPath = ServerUtility.MapPath(ConfigSetting.Current.CachePath + path + base64 + "/" + name);
+            string cacheAbsPath = ServerUtility.MapPath(ConfigSetting.Current.CachePath + "/" + base64 + path + fileName);
 
 
             //缓存文件已存在
@@ -132,7 +139,7 @@ public class DoHandler : IHttpHandler
 
 
 
-            string filePath = path + name;
+            string filePath = path + fileName;
 
             string fileAbsPath = ServerUtility.MapPath(filePath);
 
@@ -206,8 +213,49 @@ public class DoHandler : IHttpHandler
                     }
                     else
                     {
-                        outImg.Save(cacheAbsPath, originalImage.RawFormat);
-                        
+
+                        if (fileExt.IndexOf(".jp", StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            long flag = 95;
+
+                            System.Drawing.Imaging.EncoderParameters encoderParams = new System.Drawing.Imaging.EncoderParameters();
+                            long[] numArray = new long[] { flag };
+                            System.Drawing.Imaging.EncoderParameter parameter = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, numArray);
+                            encoderParams.Param[0] = parameter;
+
+
+                            System.Drawing.Imaging.ImageCodecInfo[] imageEncoders = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders();
+                            System.Drawing.Imaging.ImageCodecInfo encoder = null;
+                            for (int i = 0; i < imageEncoders.Length; i++)
+                            {
+                                if (imageEncoders[i].FormatDescription.Equals("JPEG"))
+                                {
+                                    encoder = imageEncoders[i];
+                                    break;
+                                }
+                            }
+
+                            if (encoder != null)
+                            {
+                                outImg.Save(cacheAbsPath, encoder, encoderParams);
+                            }
+                            else
+                            {
+                                outImg.Save(cacheAbsPath, originalImage.RawFormat);
+                            }
+
+                        }
+                        else
+                        {
+                            outImg.Save(cacheAbsPath, originalImage.RawFormat);
+                        }
+
+
+
+
+
+
+
                         Response.TransmitFile(cacheAbsPath);
                     }
 
@@ -358,6 +406,11 @@ public class DoHandler : IHttpHandler
     }
 
 
+    Server GetServerByName(string name)
+    {
+        return ConfigSetting.Current.Servers.Find(w => w.Name == name);
+    }
+
     void upload_error(FileInfo xmlfile)
     {
         if (xmlfile.Exists)
@@ -374,18 +427,21 @@ public class DoHandler : IHttpHandler
             string folder = fileNode.Attributes["Folder"].Value;
             string fileName = fileNode.Attributes["FileName"].Value;
             string fileExt = fileNode.Attributes["FileExt"].Value;
-
             string filePath = folder + fileName + fileExt;
 
             string absFilePath = ServerUtility.MapPath(filePath);
 
             if (serverNode != null && fileNode != null && File.Exists(absFilePath))
             {
-                Server ser = new Server();
+                Server ser = GetServerByName(serverNode.Attributes["Name"].Value);
 
-                ser.Name = serverNode.Attributes["Name"].Value;
-                ser.SecurityKey = serverNode.Attributes["SecurityKey"].Value;
-                ser.Uri = new Uri(serverNode.Attributes["Uri"].Value);
+
+                if (ser == null)
+                {
+                    return;
+                }
+
+
 
                 byte[] data = File.ReadAllBytes(absFilePath);
 
@@ -393,7 +449,6 @@ public class DoHandler : IHttpHandler
                 {
 
                     task.Wait();
-
                     if (task.Result)
                     {
                         Response.Write("Server:" + ser.Name + ",Uri:" + ser.Uri + " 【upload success】\r\n");
@@ -424,14 +479,18 @@ public class DoHandler : IHttpHandler
             for (int i = 0; i < fis.Length; i++)
             {
                 upload_error(fis[i]);
-
-
             }
 
             DirectoryInfo[] dirs = dir.GetDirectories();
             for (int i = 0; i < dirs.Length; i++)
             {
                 upload_errors(dirs[i]);
+            }
+
+
+            if (dir.GetFiles().Length == 0 && dir.GetDirectories().Length == 0)
+            {
+                dir.Delete();
             }
         }
     }
@@ -572,7 +631,7 @@ public class DoHandler : IHttpHandler
 
             xmlString.AppendLine("<Info>");
 
-            xmlString.AppendLine("<Server Name=\"" + server.Name + "\" Uri=\"" + server.Uri + "\" SecurityKey=\"" + server.SecurityKey + "\" />");
+            xmlString.AppendLine("<Server Name=\"" + server.Name + "\" />");
 
             xmlString.AppendLine("<File Folder=\"" + folder + "\" FileName=\"" + fileName + "\" FileExt=\"" + fileExt + "\" />");
 
