@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Web;
 
 public static class ImageHelper
@@ -47,28 +46,74 @@ public static class ImageHelper
     public static Image GetImageThumbnailCropHeight(Image originalImage, int width, int height)
     {
 
-        Image imgPhoto = GetImageThumbnailByWidth(originalImage, width);
+        decimal nPercent = (decimal)originalImage.Width / (decimal)originalImage.Height;
+        decimal newnPercent = (decimal)width / (decimal)height;
+
+
+        int x, y;
+        x = 0;
+        y = 0;
+
+        Image imgPhoto = null;
+        if (nPercent > newnPercent)
+        {
+            imgPhoto = GetImageThumbnailByHeight(originalImage, height);
+
+
+        }
+        else
+        {
+            imgPhoto = GetImageThumbnailByWidth(originalImage, width);
+
+
+        }
+
+
+
+        if (imgPhoto.Width > width)
+        {
+            x = (imgPhoto.Width - width) / 2;
+        }
+
+        if (imgPhoto.Width < width)
+        {
+            x = -(width - imgPhoto.Width) / 2;
+        }
 
         if (imgPhoto.Height > height)
         {
-            Bitmap image = new Bitmap(imgPhoto.Width, height, PixelFormat.Format24bppRgb);
-            Graphics graphics = Graphics.FromImage(image);
-            graphics.FillRectangle(Brushes.White, 0, 0, width, height);
+            y = (imgPhoto.Height - height) / 2;
+        }
 
-            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        if (imgPhoto.Height < height)
+        {
+            y = -(height - imgPhoto.Height) / 2;
+        }
+
+
+        if (imgPhoto.Width == width && imgPhoto.Height == height)
+        {
+            return imgPhoto;
+
+        }
+        else
+        {
+            Bitmap image = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+
+            Graphics graphics = Graphics.FromImage(image);
+
+            graphics.InterpolationMode = InterpolationMode.High;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
-            graphics.DrawImage(imgPhoto, new Rectangle(0, 0, imgPhoto.Width, height), new Rectangle(0, 0, imgPhoto.Width, height), GraphicsUnit.Pixel);
+            graphics.DrawImage(imgPhoto, new Rectangle(0, 0, width, height), new Rectangle(x, y, width, height), GraphicsUnit.Pixel);
             graphics.Dispose();
             imgPhoto.Dispose();
 
             return image;
         }
-        else
-        {
-            return imgPhoto;
-        }
+
+
     }
 
     public static Image GetImageThumbnail(Image imgPhoto, int width, int height)
@@ -99,9 +144,8 @@ public static class ImageHelper
         {
             Bitmap image = new Bitmap(w, h, PixelFormat.Format24bppRgb);
             Graphics graphics = Graphics.FromImage(image);
-            graphics.FillRectangle(Brushes.White, 0, 0, width, height);
 
-            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.InterpolationMode = InterpolationMode.Default;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
 
@@ -130,12 +174,10 @@ public static class ImageHelper
 
             Image waterImg = Image.FromFile(wmAbsPath);
 
-            graphics.FillRectangle(Brushes.White, 0, 0, originalImg.Width, originalImg.Height);
 
-            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.InterpolationMode = InterpolationMode.Default;
             graphics.SmoothingMode = SmoothingMode.HighQuality;
             graphics.CompositingQuality = CompositingQuality.HighQuality;
-
 
             graphics.DrawImage(originalImg, new Rectangle(0, 0, originalImg.Width, originalImg.Height), 0, 0, originalImg.Width, originalImg.Height, GraphicsUnit.Pixel);
 
@@ -170,47 +212,6 @@ public static class ImageHelper
             waterImg.Dispose();
         }
         return image;
-    }
-
-
-    public static Image ZipImage(Image imgPhoto, int flag)
-    {
-        EncoderParameters encoderParams = new EncoderParameters();
-        long[] numArray = new long[] { (long)flag };
-        EncoderParameter parameter = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, numArray);
-        encoderParams.Param[0] = parameter;
-
-
-
-        try
-        {
-            ImageCodecInfo[] imageEncoders = ImageCodecInfo.GetImageEncoders();
-            ImageCodecInfo encoder = null;
-            for (int i = 0; i < imageEncoders.Length; i++)
-            {
-                if (imageEncoders[i].FormatDescription.Equals("JPEG"))
-                {
-                    encoder = imageEncoders[i];
-                    break;
-                }
-            }
-            MemoryStream stream = new MemoryStream();
-            if (encoder != null)
-            {
-                imgPhoto.Save(stream, encoder, encoderParams);
-            }
-            else
-            {
-                imgPhoto.Save(stream, imgPhoto.RawFormat);
-            }
-
-
-            return Image.FromStream(stream);
-        }
-        catch
-        {
-            return null;
-        }
     }
 
 

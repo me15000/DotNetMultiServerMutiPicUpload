@@ -241,13 +241,13 @@ public class DoHandler : IHttpHandler
                             }
                             else
                             {
-                                outImg.Save(cacheAbsPath, originalImage.RawFormat);
+                                outImg.Save(cacheAbsPath);
                             }
 
                         }
                         else
                         {
-                            outImg.Save(cacheAbsPath, originalImage.RawFormat);
+                            outImg.Save(cacheAbsPath);
                         }
 
 
